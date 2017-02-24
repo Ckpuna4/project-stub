@@ -13,6 +13,7 @@ const gulpif = require('gulp-if');
 const uglify = require('gulp-uglify');
 const bemhtml = require('gulp-bem-xjst').bemhtml;
 const toHtml = require('gulp-bem-xjst').toHtml;
+const fs = require('fs');
 
 const YENV = process.env.YENV || 'development';
 const isProd = YENV === 'production';
@@ -34,6 +35,35 @@ const builder = Builder({
         css: ['post.css', 'css']
     }
 });
+
+
+gulp.task('static:clean', (done) => {
+    const dir = './static';
+
+    if (!fs.existsSync(dir)){
+        done();
+        return;
+    }
+
+    return gulp.src(dir, {read: false})
+        .pipe(require('gulp-clean')())
+        .on('end', done);
+});
+
+gulp.task('static:build', (done) => {
+    const dir = './static';
+
+    if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir);
+    }
+
+    gulp.src('./*.blocks/**/*.{gif,png,svg,woff}')
+        .pipe(require('gulp-flatten')({includeParents: 0}))
+        .pipe(gulp.dest(dir))
+        .on('end', done);
+});
+
+gulp.task('static', gulp.series('static:clean', 'static:build'));
 
 gulp.task('build', () => {
     return bundler('*.bundles/*')
